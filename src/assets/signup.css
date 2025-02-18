@@ -1,5 +1,5 @@
 body{
-    margin-top:10rem;
+    margin-top:7rem;
     padding-top:4.2rem;
     padding-bottom:4.2rem;
     background:url(/src/assets/images/andrea-davis-IWfe63thJxk-unsplash.jpg) no-repeat center center fixed;
@@ -9,7 +9,7 @@ body{
      text-decoration:none !important;
      color: #D2B48C; /* Forest Green for a natural look */
     font-weight: bold;
-    transition: color 0.3s ease
+    transition: color 0.3s ease;
      }
      a:hover{
       color: #f5c6a2; /* Warm Brown on hover */     }
@@ -39,7 +39,7 @@ body{
      text-transform:uppercase;
      }
      .mybtn{
-     border-radius:50px;
+     border-radius:5px;
      }
     
      .login-or {

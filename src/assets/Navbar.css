@@ -1,0 +1,29 @@
+.Navbar{
+    position: fixed; /* Add this line */
+    top: 0; /* Add this line */
+    width: 100%; /* Add this line to ensure the navbar spans the full width */
+}
+.localnav{
+    background-color:  rgba(0, 0, 0, 0.5);
+}
+.Link{
+    color:#dc9f50 !important;
+    font-weight: bold !important;
+}
+.Link:hover{
+    color: #dcb98b !important;
+}
+.localli{
+    margin-right: 2rem;
+}
+.dropdown-link{
+    background-color:  rgba(0, 0, 0, 0.5);
+}
+.Link-drop{
+    color: #dc9f50 !important;
+}
+.Link-drop:hover{
+    background-color: #dcb98b !important;
+    color: #e1563a !important;
+}
+/* Add this line */

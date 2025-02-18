@@ -5,11 +5,13 @@ import viteLogo from '/vite.svg'
 import { Login } from './components/Login'
 import { Route, Routes } from 'react-router-dom'
 import { SignUp } from './components/SignUp'
+import { NavBar } from './components/NavBar'
 
 function App() {
 
   return (
     <div>
+      <NavBar />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
