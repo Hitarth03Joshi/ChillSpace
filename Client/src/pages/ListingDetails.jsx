@@ -1,22 +1,80 @@
 import { useEffect, useState } from "react";
 import "../styles/ListingDetails.scss";
-import { useNavigate, useParams } from "react-router-dom";
-// import { facilities } from "../data";
-
+import { data, Link, useNavigate, useParams } from "react-router-dom";
+import { facilities } from "../data";
+import axios from "axios";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
 import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Footer from "../components/Footer"
+import { setListing } from "../redux/state";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
-
+  const dispatch = useDispatch();
   const { listingId } = useParams();
-  const [listing, setListing] = useState(null);
+  const [listing, setlisting] = useState(null);
 
+  const handleRequest = async ()=>{
+    try{
+      console.log("Requesting to update property listing")
+      const res = await axios.post('http://localhost:3001/requests/add', {
+        userId: customerId,
+        listingId: listingId,
+        message: "I would like to update this property listing",
+      })
+      if(res.status === 201){
+        alert("Request sent successfully")
+      }
+      else{
+        alert("Request failed")
+      }
+    }catch(err){
+      console.log("Request Failed", err.message)
+      alert("Request Failed", err.message)
+    }
+  }
+  const [IsrequestForUpdate, setIsrequestForUpdate] = useState(false)
+  const getRequest = async () => {
+    try {
+      const res = await axios.get(`http://localhost:3001/requests/get/${listingId}`);
+      console.log("Request", res.data)
+      if(res.status === 200){
+        res.data.forEach((item) => {
+          if(item.status === "accepted"){
+            if(item.message === "I would like to update this property listing"){
+              setIsrequestForUpdate(true)
+            }
+          }else if(item.status === "pending"){
+            if(item.message === "I would like to update this property listing"){
+              setIsrequestForUpdate(false)
+            }
+          }else if(item.status === "rejected"){
+            if(item.message === "I would like to update this property listing"){
+              setIsrequestForUpdate(false)
+            }
+          }else{
+            setIsrequestForUpdate(false)
+          }
+        })
+        if(res.data.length === 0){
+          setIsrequestForUpdate(false)
+        }
+      }
+    } catch (err) {
+      console.log("Fetch Requests Failed", err.message);
+    }
+  }
+
+  const handleUpdate = () => {
+    dispatch(setListing(listing))
+    navigate('updateproperty')
+  }
+
+  /* FETCH LISTING DETAILS */
   const getListingDetails = async () => {
     try {
       const response = await fetch(
@@ -27,7 +85,7 @@ const ListingDetails = () => {
       );
 
       const data = await response.json();
-      setListing(data);
+      setlisting(data);
       setLoading(false);
     } catch (err) {
       console.log("Fetch Listing Details Failed", err.message);
@@ -36,10 +94,8 @@ const ListingDetails = () => {
 
   useEffect(() => {
     getListingDetails();
+    getRequest();
   }, []);
-
-  console.log(listing)
-
 
   /* BOOKING CALENDAR */
   const [dateRange, setDateRange] = useState([
@@ -106,7 +162,7 @@ const ListingDetails = () => {
         <div className="photos">
           {listing.listingPhotoPaths?.map((item) => (
             <img
-              src={`http://localhost:3001/${item.replace("public", "")}`}
+              src={`${item}`}
               alt="listing photo"
             />
           ))}
@@ -124,10 +180,7 @@ const ListingDetails = () => {
 
         <div className="profile">
           <img
-            src={`http://localhost:3001/${listing.creator.profileImagePath.replace(
-              "public",
-              ""
-            )}`}
+            src={`${listing.creator.profileImagePath}`}
           />
           <h3>
             Hosted by {listing.creator.firstName} {listing.creator.lastName}
@@ -147,7 +200,8 @@ const ListingDetails = () => {
           <div>
             <h2>What this place offers?</h2>
             <div className="amenities">
-              {listing.amenities[0].split(",").map((item, index) => (
+              {/* {listing.amenities[0].split(",").map((item, index) => ( */}
+              {listing.amenities.map((item, index) => (
                 <div className="facility" key={index}>
                   <div className="facility_icon">
                     {
@@ -158,6 +212,15 @@ const ListingDetails = () => {
                   <p>{item}</p>
                 </div>
               ))}
+            </div>
+            <div className="date-range-calendar">
+              {!IsrequestForUpdate && <h1 style={{color:"red"}}>Pending</h1>}
+              {IsrequestForUpdate && listing ? <button className="button" onClick={()=>{handleUpdate()}} >
+                Update
+              </button>:
+              <button className="button" onClick={()=>{handleRequest()}} >
+              Request Update
+            </button>}
             </div>
           </div>
 

@@ -21,6 +21,7 @@ const UserSchema = new mongoose.Schema(
     },
     roleId:{
       type:mongoose.Schema.Types.ObjectId,
+      ref:"Role",
       required:true
     },
     profileImagePath: {
@@ -37,6 +38,7 @@ const UserSchema = new mongoose.Schema(
     },
     propertyList: {
       type: Array,
+      ref: "Listing",
       default: [],
     },
     reservationList: {

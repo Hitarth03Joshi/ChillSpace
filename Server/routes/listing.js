@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const multer = require("multer");
-
+const cloudinaryUtils = require("../utils/CloudinaryUtil");
 const Listing = require("../models/Listing");
 const User = require("../models/User")
 

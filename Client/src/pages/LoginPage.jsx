@@ -1,63 +1,67 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/Login.scss"
 import { setLogin } from "../redux/state";
 import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form";
+import axios from "axios";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  const {register, handleSubmit, formState: { errors }} = useForm() 
 
   const dispatch = useDispatch()
 
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    try {
-      const response = await fetch ("http://localhost:3001/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-      })
-
-      /* Get data after fetching */
-      const loggedIn = await response.json()
-
-      if (loggedIn) {
-        dispatch (
-          setLogin({
-            user: loggedIn.user,
-            token: loggedIn.token
-          })
-        )
-        navigate("/")
-      }
-
-    } catch (err) {
-      console.log("Login failed", err.message)
-    }
+  const submitHandler = async (data) => {
+    try{
+          const res = await axios.post("http://localhost:3001/User/login", data);
+          if (res) {
+            alert(res.data.message) //tost...
+            dispatch(
+              setLogin({
+                user: res.data.data,
+                token:res.data.token
+              })
+            )
+    
+            if(res.data.data.roleId.name === "Guest"){
+              navigate("/");
+            }
+            else if(res.data.data.roleId.name === "Host"){
+              navigate("/");
+            }
+            if(res.data.data.roleId.name === "User"){
+              navigate("/");
+            }
+            else if(res.data.data.roleId.name === "Admin"){
+              navigate("/")
+            }
+          }
+        } catch (error) {
+          alert(error.response.data.message);
+        }
   }
 
   return (
     <div className="login">
       <div className="login_content">
-        <form className="login_content_form" onSubmit={handleSubmit}>
+        <form className="login_content_form" onSubmit={handleSubmit(submitHandler)}>
           <input
             type="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            // value={email}
+            // onChange={(e) => setEmail(e.target.value)}
+            {...register("email", { required: true })}
             required
           />
           <input
             type="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            // value={password}
+            // onChange={(e) => setPassword(e.target.value)}
+            {...register("password", { required: true })}
             required
           />
           <button type="submit">LOG IN</button>

@@ -11,9 +11,9 @@ const TripList = () => {
   const [loading, setLoading] = useState(true);
   const userId = useSelector((state) => state.user._id);
   const tripList = useSelector((state) => state.user.tripList);
-
   const dispatch = useDispatch();
 
+  useEffect(() => {console.log(tripList)}, [tripList]);
   const getTripList = async () => {
     try {
       const response = await fetch(

@@ -9,6 +9,7 @@
   align-items: center;
   flex-direction: column;
   background: url("../../public/assets/register.jpg") center;
+  // position: fixed;
   background-size: cover;
 
   &_content {
@@ -53,6 +54,9 @@
         }
       }
 
+      option{
+        background-color: transparent;
+      }
       label {
         display: flex;
         flex-direction: column;
@@ -78,6 +82,49 @@
           box-shadow: 0 0 10px 3px rgba(255, 255, 255);
         }
       }
+
+
+      select {
+        width: 100%;
+        padding: 7px 15px;
+        background-color: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        outline: none;
+        text-align: center;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        appearance: none; // Removes default OS dropdown styling
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        position: relative;
+      }
+      
+      /* Style the dropdown arrow (custom look) */
+      select::after {
+        content: "▼";
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        pointer-events: none;
+      }
+      
+      /* Style for dropdown options */
+      option {
+        background-color: black;
+        color: white;
+        padding: 10px;
+        font-size: 14px;
+      }
+      
+      /* Dropdown expands when selected */
+      select:focus {
+        border-bottom: 1px solid white;
+      }
+      
     }
 
     a {

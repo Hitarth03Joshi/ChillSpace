@@ -18,6 +18,23 @@ const RegisterPage = () => {
     });
   };
 
+  const [isGuest, setisGuest] = useState(false)
+  const [isHost, setisHost] = useState(false)
+  const handleroleChange = (roleid)=>{
+    if(roleid === "67e3e0313765b43d5bc82e8f"){
+      setisGuest(true)
+      setisHost(false)
+    }
+    else if(roleid === "67e3dfe23765b43d5bc82e8d"){
+      setisHost(true)
+      setisGuest(false)
+    }
+    else{
+      setisGuest(false)
+      setisHost(false)
+    }
+  }
+
   const [passwordMatch, setPasswordMatch] = useState(true)
   const [ProfileImage, setProfileImage] = useState(null)
 
@@ -84,14 +101,17 @@ const RegisterPage = () => {
     Formdata.append("firstName", data.firstName)
     Formdata.append("lastName", data.lastName)
     Formdata.append("email", data.email)
+    Formdata.append("roleId", data.roleId)
     Formdata.append("password", formData.password)
-    Formdata.append("image", ProfileImage)
+    if (ProfileImage) {
+      Formdata.append("image", ProfileImage);
+    }
     try {
-          const res = await axios.post("http://localhost:3001/User/register", formData);
+          const res = await axios.post("http://localhost:3001/User/register", Formdata);
           if (res.status === 201) {
             alert("Account Created") //tost...
             navigate("/login")
-          } 
+          }
           else if (res.status === 409) {
             alert("Already Exist");
           }
@@ -127,6 +147,11 @@ const RegisterPage = () => {
             type="email"
             {...register("email",Validation.emailValidator)}
           />
+          <select {...register("roleId")}
+            onChange={(e)=>{handleroleChange(e.target.value)}}>
+            <option value="67e3e0313765b43d5bc82e8f">Guest</option>
+            <option value="67e3dfe23765b43d5bc82e8d">Host</option>
+          </select>
           <input
             type="password"
             placeholder="Password"
@@ -147,19 +172,20 @@ const RegisterPage = () => {
             <p style={{ color: "red" }}>Passwords are not matched!</p>
           )}
 
-          <input
+          {isHost && <input
             id="image"
             type="file"
             name="profileImage"
             accept="image/*"
             onChange={(e) => setProfileImage( e.target.files[0] )}
-            style={{ display: "none" }}
+            style={{ opacity: 0, position: "absolute", zIndex: -1 }}
             required
-          />
-          <label htmlFor="image">
+          />}
+
+          {isHost &&<label htmlFor="image">
             <img src="/assets/addImage.png" alt="add profile photo" />
             <p>Upload Your Photo</p>
-          </label>
+          </label>}
 
           {ProfileImage && (
             <img
@@ -175,5 +201,6 @@ const RegisterPage = () => {
     </div>
   );
 };
+
 
 export default RegisterPage;

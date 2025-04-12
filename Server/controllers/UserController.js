@@ -1,44 +1,44 @@
-const multer = require("multer");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const userModel = require("../models/User");
 const cloudinaryUtil = require("../utils/CloudinaryUtil");
 
-const storage = multer.diskStorage({
-  destination:"./uploads",
-  filename: function (req,file,cb){
-      cb(null,file.originalname);
-  }
-});
 
-const upload = multer({
-  storage:storage
-}).single('image');
 //User Registretion
-
 const addUser = async(req,res)=>{
-  upload(req,res,async(err)=>{
-    if(err){
-        res.status(500).json({
-            message:err.message
-        })
-    }
-    else{
-
       try{
           const findByEMail = await userModel.findOne({email:req.body.email});
           if(findByEMail != null){
-              res.status(409).json({
-                  message:"Account already exists"
-              })
+            if(findByEMail.roleId == req.body.roleId){
+                res.status(409).json({
+                    message:"Account already exists"
+                })
+            }
+            else{
+                const salt = bcrypt.genSaltSync(10);
+                const hashedPassword = bcrypt.hashSync(req.body.password,salt);
+                req.body.password=hashedPassword;
+                if (req.file) {
+                    const cloudinaryResponse = await cloudinaryUtil.uploadFileCloudinary(req.file);
+                    req.body.profileImagePath = cloudinaryResponse.secure_url;
+                  }
+                const user = await userModel.create(req.body);
+                res.status(201).json({
+                    message:"user created...",
+                    data:user
+                })
+            }
           }
           else
           {
               const salt = bcrypt.genSaltSync(10);
               const hashedPassword = bcrypt.hashSync(req.body.password,salt);
               req.body.password=hashedPassword;
-              const cloudinaryResponse = await cloudinaryUtil.uploadFileCloudinary(req.file)
-              req.body.profileImagePath = cloudinaryResponse.secure_url
+              if (req.file) {
+                const cloudinaryResponse = await cloudinaryUtil.uploadFileCloudinary(req.file);
+                profileImagePath = cloudinaryResponse.secure_url;
+              }
               const user = await userModel.create(req.body);
               res.status(201).json({
                   message:"user created...",
@@ -47,26 +47,25 @@ const addUser = async(req,res)=>{
           }
       }
       catch(err){
-          console.log(err);
           res.status(500).json({
-              message:"error...",
-              data:err.message
+              message:err.message
           })
-      }
-    }
-  })
+      }    
 }
 
 const loginUser = async(req,res)=>{
     try{
         const findByEMail = await userModel.findOne({email:req.body.email}) . populate("roleId");
-        console.log(findByEMail);
         if(findByEMail != null){
             const ismatch = bcrypt.compareSync(req.body.password,findByEMail.password);
             if(ismatch == true){
+                const token = jwt.sign(findByEMail.toObject(), process.env.JWT_SECRET);
+                delete findByEMail.password
+                // res.status(200).json({ token, user })
                 res.status(200).json({
                     message:"login success...",
-                    data:findByEMail
+                    data:findByEMail,
+                    token
                 })
             }
             else{
@@ -83,8 +82,7 @@ const loginUser = async(req,res)=>{
     }
     catch(err){
         res.status(500).json({
-            message:"server err....",
-            data:err.message
+            message:err.message
         })
     }
 }
@@ -103,12 +101,19 @@ const deleteUser = async(req,res)=>{
     }
 }
 
-const getUser = async(req,res)=>{
-    const user = await userModel.findById(req.params.id)
-    res.json({
-        message:"User fetched...",
-        data:user
-    })
+const getUserById = async(req,res)=>{
+    try{
+        const user = await userModel.findById(req.params.id)
+        res.json({
+            message:"User fetched...",
+            data:user
+        })
+    }catch(err){
+        res.status(500).json({
+            message:err.message
+        })
+    }
+
 }
 
 const getUsers = async(req,res)=>{
@@ -120,7 +125,20 @@ const getUsers = async(req,res)=>{
     })
 }
 
+const getAllHosts = async(req,res)=>{
+    try{
+        const hosts = await userModel.find({roleId:"67e3dfe23765b43d5bc82e8d"}).populate("roleId").populate("propertyList")
+        res.json({
+            message:"Hosts fetched...",
+            data:hosts
+        })
+    }catch(err){
+        res.status(500).json({
+            message:err.message
+        })
+    }
+}
 
 module.exports={
-    addUser,loginUser,deleteUser,getUser,getUsers
+    addUser,loginUser,deleteUser,getUserById,getUsers,getAllHosts
 }

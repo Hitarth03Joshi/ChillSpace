@@ -11,7 +11,6 @@ const PropertyList = () => {
   const [loading, setLoading] = useState(true)
   const user = useSelector((state) => state.user)
   const propertyList = user?.propertyList;
-  console.log(user)
 
   const dispatch = useDispatch()
   const getPropertyList = async () => {
@@ -20,7 +19,6 @@ const PropertyList = () => {
         method: "GET"
       })
       const data = await response.json()
-      console.log(data)
       dispatch(setPropertyList(data))
       setLoading(false)
     } catch (err) {

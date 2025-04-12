@@ -12,7 +12,7 @@ const Listings = () => {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const listings = useSelector((state) => state.listings);
+  const listings = useSelector((state) => state.listings);  
 
   const getFeedListings = async () => {
     try {
@@ -56,7 +56,7 @@ const Listings = () => {
         <Loader />
       ) : (
         <div className="listings">
-          {listings.map(
+          {listings?.map(
             ({
               _id,
               creator,

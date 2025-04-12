@@ -12,8 +12,9 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getCSSVariables } from "../styles/GetCssVariables";
 import Footer from "../components/Footer"
+import axios from "axios";
 
-const CreateListing = () => {
+const ListingUpdate = () => {
   const [category, setCategory] = useState("");
   const [type, setType] = useState("");
 
@@ -44,23 +45,24 @@ const CreateListing = () => {
 
   /* AMENITIES */
   const [amenities, setAmenities] = useState([]);
-
-  const handleSelectAmenities = (facility) => {
-    if (amenities.includes(facility)) {
-      setAmenities((prevAmenities) =>
-        prevAmenities.filter((option) => option !== facility)
-      );
-    } else {
-      setAmenities((prev) => [...prev, facility]);
-    }
+  
+  const handleSelectAmenities = (facilityName) => {
+    setAmenities((prevAmenities) =>
+      prevAmenities.includes(facilityName)
+        ? prevAmenities.filter((name) => name !== facilityName) // Remove
+        : [...prevAmenities, facilityName] // Add
+    );
   };
+  
 
   /* UPLOAD, DRAG & DROP, REMOVE PHOTOS */
   const [photos, setPhotos] = useState([]);
-
+  const [setPhoto, setsetPhoto] = useState(false)
   const handleUploadPhotos = (e) => {
+    setsetPhoto(true)
     const newPhotos = e.target.files;
     setPhotos((prevPhotos) => [...prevPhotos, ...newPhotos]);
+    
   };
 
   const handleDragPhoto = (result) => {
@@ -96,9 +98,41 @@ const CreateListing = () => {
     });
   };
 
-  const creatorId = useSelector((state) => state.user._id);
+  const creatorId = useSelector((state) => state.user?._id);
+  const Listing = useSelector((state) => state.listing);
 
   const navigate = useNavigate();
+
+  const getListing = async()=>{
+    setCategory(Listing.category)
+    setType(Listing.type)
+    setFormLocation({
+      streetAddress: Listing.streetAddress,
+      aptSuite: Listing.aptSuite,
+      city: Listing.city,
+      province: Listing.province,
+      country: Listing.country,
+    })
+    setGuestCount(Listing.guestCount)
+    setBedroomCount(Listing.bedroomCount)
+    setBedCount(Listing.bedCount)
+    setBathroomCount(Listing.bathroomCount)
+    // Listing.amenities &&
+    // Listing.amenities.map((amenity) => {handleSelectAmenities(amenity)})
+    setAmenities(Listing.amenities || []);    
+    setPhotos(Listing.listingPhotoPaths)
+    setFormDescription({
+      title: Listing.title,
+      description: Listing.description,
+      highlight: Listing.highlight,
+      highlightDesc: Listing.highlightDesc,
+      price: Listing.price,
+    })
+  }
+
+    useEffect(()=>{
+        getListing()
+    },[Listing])
 
   const handlePost = async (e) => {
     e.preventDefault();
@@ -106,7 +140,6 @@ const CreateListing = () => {
     try {
       /* Create a new FormData onject to handle file uploads */
       const listingForm = new FormData();
-      listingForm.append("creator", creatorId);
       listingForm.append("category", category);
       listingForm.append("type", type);
       listingForm.append("streetAddress", formLocation.streetAddress);
@@ -123,29 +156,30 @@ const CreateListing = () => {
       listingForm.append("highlight", formDescription.highlight);
       listingForm.append("highlightDesc", formDescription.highlightDesc);
       listingForm.append("price", formDescription.price);
-      
+
       /* Append each selected amenities to the FormData object */
-      amenities.forEach((amenity) => {
+      amenities.forEach((amenity)=>{
         listingForm.append("amenities", amenity);
-      });
-      
+      })
       /* Append each selected photos to the FormData object */
       photos.forEach((photo) => {
         listingForm.append("images", photo);
       });
 
-      /* Send a POST request to server */
-      const response = await fetch("http://localhost:3001/properties/create", {
-        method: "POST",
-        body: listingForm,
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        navigate("/");
+      // console.log("Listing Form Data:");
+      // for (let pair of listingForm.entries()) {
+      //   console.log(pair[0], pair[1]);
+      // }
+
+      /* Send a PATCH request to server */
+      const res = await axios.put(`http://localhost:3001/properties/updatelisting/${Listing._id}`,listingForm)
+      if (res.status === 200) {
+        console.log("Listing updated successfully", res.data);
+        navigate("/properties/"+Listing._id);
       }
     } catch (err) {
-      console.log(err.message);
+      console.log("Publish Listing failed", err.message);
     }
   };
   return (
@@ -386,6 +420,18 @@ const CreateListing = () => {
                   <p>{item.name}</p>
                 </div>
               ))}
+
+              {/* {facilities.map((facility) => (
+                <div key={facility.name}>
+                  <input
+                    type="checkbox"
+                    checked={amenities.includes(facility.name)}
+                    onChange={() => handleSelectAmenities(facility.name)}
+                  />
+                  {facility.icon} {facility.name}
+                </div>
+              ))} */}
+
             </div>
 
             <h3>Add some photos of your place</h3>
@@ -418,7 +464,7 @@ const CreateListing = () => {
 
                     {photos.length >= 1 && (
                       <>
-                        {photos.map((photo, index) => {
+                        {photos.map((item, index) => {
                           return (
                             <Draggable
                               key={index}
@@ -432,10 +478,13 @@ const CreateListing = () => {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                 >
-                                  <img
-                                    src={URL.createObjectURL(photo)}
+                                  {/* { <img
+                                    src={item || URL.createObjectURL(item)} 
                                     alt="place"
-                                  />
+                                  />} */}
+                                  <img src={item instanceof File ? URL.createObjectURL(item) : item} alt="place" />
+
+                                  
                                   <button
                                     type="button"
                                     onClick={() => handleRemovePhoto(index)}
@@ -531,4 +580,4 @@ const CreateListing = () => {
   );
 };
 
-export default CreateListing;
+export default ListingUpdate;
