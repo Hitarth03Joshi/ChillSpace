@@ -52,26 +52,63 @@ const updateRequest = async (req, res) => {
 
         let updateData = { status };
 
-        // 🕒 If accepted, set expiration time
+        // If accepting the request, set expiration time to 1 minute from now (for testing)
         if (status === "accepted") {
             const expiresAt = new Date();
-            // expiresAt.setMinutes(expiresAt.getMinutes+1); // valid for 24 hours
+            expiresAt.setMinutes(expiresAt.getMinutes() + 1); // Changed from 24 hours to 1 minute
             updateData.expiresAt = expiresAt;
         }
 
-        const updatedRequest = await requestModel.findByIdAndUpdate(id, { status }, { new: true });
+        // If rejecting or marking as expired, remove any expiration time
+        if (status === "rejected" || status === "expired") {
+            updateData.expiresAt = null;
+        }
+
+        const updatedRequest = await requestModel.findByIdAndUpdate(
+            id, 
+            updateData,
+            { new: true }
+        );
+        
+        if (!updatedRequest) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
+
         res.status(200).json(updatedRequest);
     }catch(err){
         console.error(err);
         res.status(500).json({ message: 'Internal server error' });
     }
 }
+
 const deleteRequest = async (req, res) => {
     try{
-        const { id } = req.params.id;
-        await requestModel.findByIdAndDelete(id);
+        const { id } = req.params;
+        const deletedRequest = await requestModel.findByIdAndDelete(id);
+        if (!deletedRequest) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
         res.status(200).json({ message: 'Request deleted successfully' });
     }catch(err){
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+const checkExpiredRequests = async (req, res) => {
+    try {
+        const now = new Date();
+        const expiredRequests = await requestModel.updateMany(
+            {
+                status: "accepted",
+                expiresAt: { $lt: now }
+            },
+            {
+                $set: { status: "expired" }
+            }
+        );
+        res.status(200).json({ message: `${expiredRequests.modifiedCount} requests marked as expired` });
+    } catch(err) {
         console.error(err);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -82,5 +119,6 @@ module.exports = {
     getAllRequests,
     updateRequest,
     deleteRequest,
-    getRequestById
+    getRequestById,
+    checkExpiredRequests
 };

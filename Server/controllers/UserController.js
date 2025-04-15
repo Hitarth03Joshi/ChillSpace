@@ -118,7 +118,7 @@ const getUserById = async(req,res)=>{
 
 const getUsers = async(req,res)=>{
 
-    const users = await userModel.find()
+    const users = await userModel.find().populate("roleId")
     res.json({
         message:"User fetched....",
         data:users

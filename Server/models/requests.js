@@ -18,16 +18,18 @@ const requestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected"],
+      enum: ["pending", "accepted", "rejected", "expired"],
       default: "pending",
     },
     expiresAt: {
-      type: Date, // 🆕 this field helps track when the request is no longer valid
+      type: Date, // This field helps track when the request is no longer valid
     }
   },
   { timestamps: true }
 )
 
-requestSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 60 });
+// Set TTL index to automatically mark documents as expired after 24 hours
+// We don't delete the document, just mark it as expired
+requestSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("Request", requestSchema)

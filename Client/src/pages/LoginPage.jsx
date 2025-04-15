@@ -36,7 +36,7 @@ const LoginPage = () => {
               navigate("/");
             }
             else if(res.data.data.roleId.name === "Admin"){
-              navigate("/")
+              navigate("/admin/overview")
             }
           }
         } catch (error) {

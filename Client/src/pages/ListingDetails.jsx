@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "../styles/ListingDetails.scss";
+import "../styles/Requests.scss";
 import { data, Link, useNavigate, useParams } from "react-router-dom";
 import { facilities } from "../data";
 import axios from "axios";
@@ -17,6 +18,7 @@ const ListingDetails = () => {
   const dispatch = useDispatch();
   const { listingId } = useParams();
   const [listing, setlisting] = useState(null);
+  const [requestStatus, setRequestStatus] = useState(null)
 
   const handleRequest = async ()=>{
     try{
@@ -37,31 +39,18 @@ const ListingDetails = () => {
       alert("Request Failed", err.message)
     }
   }
-  const [IsrequestForUpdate, setIsrequestForUpdate] = useState(false)
   const getRequest = async () => {
     try {
       const res = await axios.get(`http://localhost:3001/requests/get/${listingId}`);
-      console.log("Request", res.data)
-      if(res.status === 200){
-        res.data.forEach((item) => {
-          if(item.status === "accepted"){
-            if(item.message === "I would like to update this property listing"){
-              setIsrequestForUpdate(true)
-            }
-          }else if(item.status === "pending"){
-            if(item.message === "I would like to update this property listing"){
-              setIsrequestForUpdate(false)
-            }
-          }else if(item.status === "rejected"){
-            if(item.message === "I would like to update this property listing"){
-              setIsrequestForUpdate(false)
-            }
-          }else{
-            setIsrequestForUpdate(false)
-          }
-        })
-        if(res.data.length === 0){
-          setIsrequestForUpdate(false)
+      if (res.status === 200) {
+        const currentRequest = res.data.find(item => 
+          item.message === "I would like to update this property listing"
+        );
+        
+        if (currentRequest) {
+          setRequestStatus(currentRequest.status);
+        } else {
+          setRequestStatus(null);
         }
       }
     } catch (err) {
@@ -214,13 +203,25 @@ const ListingDetails = () => {
               ))}
             </div>
             <div className="date-range-calendar">
-              {!IsrequestForUpdate && <h1 style={{color:"red"}}>Pending</h1>}
-              {IsrequestForUpdate && listing ? <button className="button" onClick={()=>{handleUpdate()}} >
-                Update
-              </button>:
-              <button className="button" onClick={()=>{handleRequest()}} >
-              Request Update
-            </button>}
+              {requestStatus && (
+                <div className={`request-status status-${requestStatus}`}>
+                  Request Status: {requestStatus}
+                </div>
+              )}
+              
+              {requestStatus === "accepted" ? (
+                <button className="button" onClick={handleUpdate}>
+                  Update Property
+                </button>
+              ) : requestStatus === "pending" ? (
+                <div className="pending-message">
+                  Update request is pending approval
+                </div>
+              ) : (
+                <button className="button" onClick={handleRequest}>
+                  Request Update
+                </button>
+              )}
             </div>
           </div>
 

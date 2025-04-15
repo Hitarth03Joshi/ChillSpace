@@ -13,7 +13,10 @@ import SearchPage from "./pages/SearchPage";
 import ListingUpdate from './pages/ListingUpdate';
 import axios from 'axios';
 import { GetHosts } from './pages/GetHosts';
-import { RequestsPage } from './pages/RequestsPage';
+import RequestsPage from './pages/admin/RequestsPage';
+import AdminDashboard from './pages/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import PropertyManagement from './pages/admin/PropertyManagement';
 
 function App() {
 
@@ -37,6 +40,13 @@ function App() {
           <Route path="/:userId/reservations" element={<ReservationList />} />
           <Route path="/:userId/gethosts" element={<GetHosts />} />
           <Route path="/:useeId/requestpage" element={<RequestsPage />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/*" element={<AdminDashboard />} >
+            {/* <Route path="users" element={<UserManagement />} />
+            <Route path="requests" element={<RequestsPage />} />
+            <Route path="propertiesList" element={<PropertyManagement />} /> */}
+          </Route>
         </Routes>
       </BrowserRouter>
     </div>
