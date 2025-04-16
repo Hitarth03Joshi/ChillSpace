@@ -45,7 +45,7 @@ const Navbar = () => {
       </div>
 
       <div className="navbar_right">
-        {user ? (
+        {user?.roleId.name==="Host" ? (
           <Link to="/create-listing" className="host">
             Become A Host
           </Link>
@@ -83,28 +83,11 @@ const Navbar = () => {
 
         {dropdownMenu && user && user.roleId.name==="Host" &&(
           <div className="navbar_right_accountmenu">
-            <Link to={`/${user._id}/trips`}>Trip List</Link>
+            {/* <Link to={`/${user._id}/trips`}>Trip List</Link> */}
             {/* <Link to={`/${user._id}/wishList/`}>Wish List</Link> */}
             <Link to={`/${user._id}/properties`}>Property List</Link>
-            <Link to={`/${user._id}/reservations/`}>Reservation List</Link>
+            {/* <Link to={`/${user._id}/reservations/`}>Reservation List</Link> */}
             <Link to="/create-listing">Become A Host</Link>
-
-            <Link
-              to="/"
-              onClick={() => {
-                dispatch(setLogout());
-              }}
-            >
-              Log Out
-            </Link>
-          </div>
-        )}
-
-        {dropdownMenu && user && user.roleId.name==="Admin" &&(
-          <div className="navbar_right_accountmenu">
-            <Link to={`/${user._id}/gethosts/`}>Hosts</Link>
-            <Link to={`/${user._id}/wishList/`}>Properties List</Link>
-            <Link to={`/${user._id}/requestpage/`}>Request List</Link>
 
             <Link
               to="/"

@@ -570,7 +570,7 @@ const ListingUpdate = () => {
           </div>
 
           <button className="submit_btn" type="submit">
-            CREATE YOUR LISTING
+            UPDATE YOUR LISTING
           </button>
         </form>
       </div>

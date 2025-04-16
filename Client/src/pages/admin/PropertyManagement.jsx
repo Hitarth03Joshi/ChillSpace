@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../styles/AdminComponents.scss';
-
+import { useNavigate } from 'react-router-dom';
 const PropertyManagement = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -9,7 +9,9 @@ const PropertyManagement = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [rowsPerPage, setRowsPerPage] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
-
+  
+  
+  const navigate = useNavigate();
   useEffect(() => {
     fetchProperties();
   }, []);
@@ -39,8 +41,7 @@ const PropertyManagement = () => {
   const handleDeleteProperty = async (propertyId) => {
     if (window.confirm('Are you sure you want to delete this property?')) {
       try {
-        await axios.delete(`http://localhost:3001/properties/${propertyId}`);
-        fetchProperties();
+        await axios.delete(`http://localhost:3001/properties/delete/${propertyId}`);
       } catch (error) {
         console.error('Error deleting property:', error);
       }
@@ -92,7 +93,7 @@ const PropertyManagement = () => {
         {paginatedProperties.map(property => (
           <div key={property._id} className="property-card">
             <img 
-              src={property.images?.[0] || '/placeholder-property.jpg'} 
+              src={property.listingPhotoPaths?.[0] || '/placeholder-property.jpg'} 
               alt={property.title}
               className="property-image"
             />
@@ -127,11 +128,11 @@ const PropertyManagement = () => {
               </span>
 
               <div className="property-actions">
-                <button className="view-btn">
+                <button className="view-btn" onClick={()=>{navigate(`/properties/${property._id}`)}}>
                   <i className="fas fa-eye"></i>
                   View
                 </button>
-                <button className="edit-btn">
+                <button className="edit-btn" onClick={()=>{navigate(`/properties/${property._id}/updateproperty`)}}>
                   <i className="fas fa-edit"></i>
                   Edit
                 </button>

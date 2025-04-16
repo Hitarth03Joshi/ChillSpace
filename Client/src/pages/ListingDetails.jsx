@@ -12,6 +12,7 @@ import Navbar from "../components/Navbar";
 import { useDispatch, useSelector } from "react-redux";
 import Footer from "../components/Footer"
 import { setListing } from "../redux/state";
+import { use } from "react";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -19,12 +20,13 @@ const ListingDetails = () => {
   const { listingId } = useParams();
   const [listing, setlisting] = useState(null);
   const [requestStatus, setRequestStatus] = useState(null)
+  const customer = useSelector((state) => state?.user);
 
   const handleRequest = async ()=>{
     try{
       console.log("Requesting to update property listing")
       const res = await axios.post('http://localhost:3001/requests/add', {
-        userId: customerId,
+        userId: customer._id,
         listingId: listingId,
         message: "I would like to update this property listing",
       })
@@ -105,14 +107,15 @@ const ListingDetails = () => {
   const dayCount = Math.round(end - start) / (1000 * 60 * 60 * 24); // Calculate the difference in day unit
 
   /* SUBMIT BOOKING */
-  const customerId = useSelector((state) => state?.user?._id)
 
   const navigate = useNavigate()
 
   const handleSubmit = async () => {
     try {
       const bookingForm = {
-        customerId,
+        customerId: customer._id,
+        guestName: customer.firstName + " " + customer.lastName,
+        guestEmail: customer.email,
         listingId,
         hostId: listing.creator._id,
         startDate: dateRange[0].startDate.toDateString(),
@@ -129,7 +132,7 @@ const ListingDetails = () => {
       })
 
       if (response.ok) {
-        navigate(`/${customerId}/trips`)
+        navigate(`/${customer._id}/trips`)
       }
     } catch (err) {
       console.log("Submit Booking Failed.", err.message)
@@ -202,7 +205,7 @@ const ListingDetails = () => {
                 </div>
               ))}
             </div>
-            <div className="date-range-calendar">
+            {customer._id === listing.creator._id && <div className="date-range-calendar">
               {requestStatus && (
                 <div className={`request-status status-${requestStatus}`}>
                   Request Status: {requestStatus}
@@ -222,7 +225,7 @@ const ListingDetails = () => {
                   Request Update
                 </button>
               )}
-            </div>
+            </div>}
           </div>
 
           <div>

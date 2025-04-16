@@ -4,6 +4,7 @@ const Booking = require("../models/Booking")
 /* CREATE BOOKING */
 const addBooking =async (req, res) => {
   try {
+    console.log("Booking", req.body)
     // const { customerId, hostId, listingId, startDate, endDate, totalPrice } = req.body
     // const newBooking = new Booking({ customerId, hostId, listingId, startDate, endDate, totalPrice })
     const newBooking = await Booking.create(req.body)

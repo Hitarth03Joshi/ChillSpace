@@ -104,12 +104,21 @@ addListing= async (req, res) => {
 /* GET lISTINGS BY CATEGORY */
 const getListingByCategory= async (req, res) => {
   const qCategory = req.query.category
+  const hostId = req.query.hostId
+  console.log("Host ID", req.query)
 
   try {
     let listings
-    if (qCategory) {
-      listings = await Listing.find({ category: qCategory }).populate("creator")
-    } else {
+    if (qCategory && hostId) {
+      listings = await Listing.find({ category: qCategory , creator: hostId}).populate("creator")
+    } 
+    else if (qCategory) {
+      listings = await Listing.find({ category: qCategory }).populate("creator") 
+    } 
+    else if (hostId) {
+      listings = await Listing.find({ creator: hostId }).populate("creator")
+    }
+    else {
       listings = await Listing.find().populate("creator")
     }
 
@@ -191,11 +200,24 @@ const getAllListings = async (req, res) => {
   }
 }
 
+const deleteListing = async (req, res) => {
+  try {
+    const { listingId } = req.params
+    await Listing.findByIdAndDelete(listingId)
+    res.status(200).json({ message: "Listing deleted successfully" })
+  } catch (err) {
+    res.status(404).json({ message: "Fail to delete listing", error: err.message })
+  }
+}
+
+
+
 module.exports = {
     addListing,
     getListingByCategory,
     getBySearch,
     listingDetail,
     updateListing,
-    getAllListings
+    getAllListings,
+    deleteListing
 }

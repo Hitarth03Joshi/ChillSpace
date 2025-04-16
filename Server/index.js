@@ -10,6 +10,7 @@ const bookingRoutes = require("./routes/BookingRouter.js")
 const userRoutes = require("./routes/user.js")
 const roleRoutes = require("./routes/RoleRouter.js")
 const requestRoutes = require("./routes/requestRouter.js")
+const paymentRoutes = require("./routes/paymentRoutes.js")
 
 
 app.use(cors({ origin: "http://localhost:5173" })); 
@@ -25,6 +26,7 @@ app.use("/bookings", bookingRoutes)
 app.use("/users", userRoutes)
 app.use("/roles",roleRoutes)
 app.use("/requests", requestRoutes)
+app.use("/api/payments", paymentRoutes)
 
 
 /* MONGOOSE SETUP */

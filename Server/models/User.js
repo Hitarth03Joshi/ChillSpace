@@ -1,4 +1,6 @@
 const mongoose = require("mongoose")
+const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken")
 
 const UserSchema = new mongoose.Schema(
   {
@@ -32,10 +34,10 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
-    wishList: {
-      type: Array,
-      default: [],
-    },
+    // wishList: {
+    //   type: Array,
+    //   default: [],
+    // },
     propertyList: {
       type: Array,
       ref: "Listing",
@@ -44,10 +46,18 @@ const UserSchema = new mongoose.Schema(
     reservationList: {
       type: Array,
       default: [],
-    }
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'host', 'guest'],
+      default: 'guest',
+    },
+
+   
   },
   { timestamps: true }
 )
+
 
 const User = mongoose.model("User", UserSchema)
 module.exports = User

@@ -11,19 +11,28 @@ const Listings = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
-
   const listings = useSelector((state) => state.listings);  
+  const user = useSelector((state) => state?.user);
 
   const getFeedListings = async () => {
     try {
-      const response = await fetch(
-        selectedCategory !== "All"
-          ? `http://localhost:3001/properties?category=${selectedCategory}`
-          : "http://localhost:3001/properties",
-        {
-          method: "GET",
-        }
+      let response;
+      if (user?.roleId.name === "Host") {
+         response = await fetch(
+          selectedCategory !== "All" 
+            ? `http://localhost:3001/properties/category?category=${selectedCategory}&hostId=${user._id}`
+            : `http://localhost:3001/properties/category?hostId=${user._id}`,
+          {
+            method: "GET",
+          }
+        );
+      } else {
+         response = await fetch(
+          selectedCategory !== "All" 
+            ? `http://localhost:3001/properties/category?category=${selectedCategory}`
+            : "http://localhost:3001/properties/category",
       );
+    }
 
       const data = await response.json();
       dispatch(setListings({ listings: data }));
