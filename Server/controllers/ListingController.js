@@ -105,7 +105,6 @@ addListing= async (req, res) => {
 const getListingByCategory= async (req, res) => {
   const qCategory = req.query.category
   const hostId = req.query.hostId
-  console.log("Host ID", req.query)
 
   try {
     let listings

@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
   },
   propertyId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Property',
+    ref: 'Listing',
     required: true,
   },
   guestId: {
@@ -22,12 +22,21 @@ const paymentSchema = new mongoose.Schema({
   },
   currency: {
     type: String,
-    default: 'usd',
+    required: true,
+    default: 'USD',
+  },
+  paymentId: {
+    type: String,
+    required: true,
   },
   paymentIntentId: {
     type: String,
     required: true,
     unique: true,
+  },
+  orderId: {
+    type: String,
+    required: true,
   },
   paymentMethod: {
     type: String,
@@ -41,8 +50,8 @@ const paymentSchema = new mongoose.Schema({
   paymentDetails: {
     cardLast4: String,
     cardBrand: String,
-    cardExpiryMonth: Number,
-    cardExpiryYear: Number,
+    cardExpiryMonth: String,
+    cardExpiryYear: String,
   },
   refundDetails: {
     refundId: String,
@@ -54,27 +63,16 @@ const paymentSchema = new mongoose.Schema({
     type: Map,
     of: String,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
+}, {
+  timestamps: true,
 });
 
-// Update the updatedAt timestamp before saving
-paymentSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
-});
-
-// Add indexes for efficient querying
+// Indexes
 paymentSchema.index({ bookingId: 1 });
-paymentSchema.index({ guestId: 1, createdAt: -1 });
-paymentSchema.index({ propertyId: 1, createdAt: -1 });
-paymentSchema.index({ status: 1 });
+paymentSchema.index({ propertyId: 1 });
+paymentSchema.index({ guestId: 1 });
+paymentSchema.index({ paymentId: 1 }, { unique: true });
+paymentSchema.index({ orderId: 1 }, { unique: true });
 paymentSchema.index({ paymentIntentId: 1 }, { unique: true });
 
 const Payment = mongoose.model('Payment', paymentSchema);

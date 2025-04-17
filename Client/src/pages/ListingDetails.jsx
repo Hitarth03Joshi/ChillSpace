@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Footer from "../components/Footer"
 import { setListing } from "../redux/state";
 import { use } from "react";
+import BookingPayment from "../components/BookingPayment";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,8 @@ const ListingDetails = () => {
   const [listing, setlisting] = useState(null);
   const [requestStatus, setRequestStatus] = useState(null)
   const customer = useSelector((state) => state?.user);
+  const [showPayment, setShowPayment] = useState(false);
+  const [bookingData, setBookingData] = useState(null);
 
   const handleRequest = async ()=>{
     try{
@@ -112,6 +115,32 @@ const ListingDetails = () => {
 
   const handleSubmit = async () => {
     try {
+      // Set booking data for payment
+      setBookingData({
+        listingId: listingId,
+        listingName: listing.title,
+        startDate: dateRange[0].startDate.toDateString(),
+        endDate: dateRange[0].endDate.toDateString(),
+        checkIn: dateRange[0].startDate.toDateString(),
+        checkOut: dateRange[0].endDate.toDateString(),
+        guestName: customer.firstName + " " + customer.lastName,
+        guestEmail: customer.email,
+        userName: customer.firstName + " " + customer.lastName,
+        userEmail: customer.email,
+        userPhone: customer.phone || "",
+        totalAmount: listing.price * dayCount,
+      });
+
+      // Show payment form
+      setShowPayment(true);
+    } catch (err) {
+      console.log("Submit Booking Failed.", err.message)
+    }
+  }
+
+  const handlePaymentSuccess = async (payment) => {
+    try {
+      // Create booking with payment details
       const bookingForm = {
         customerId: customer._id,
         guestName: customer.firstName + " " + customer.lastName,
@@ -120,7 +149,9 @@ const ListingDetails = () => {
         hostId: listing.creator._id,
         startDate: dateRange[0].startDate.toDateString(),
         endDate: dateRange[0].endDate.toDateString(),
-        totalPrice: listing.price * dayCount,
+        totalAmount: listing.price * dayCount,
+        paymentIntentId: payment.paymentId, // Use Razorpay payment ID as paymentIntentId
+        status: 'confirmed'
       }
 
       const response = await fetch("http://localhost:3001/bookings/create", {
@@ -132,15 +163,36 @@ const ListingDetails = () => {
       })
 
       if (response.ok) {
-        navigate(`/${customer._id}/trips`)
+        // navigate(`/${customer._id}/trips`)
+        navigate(`/`)
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create booking');
       }
     } catch (err) {
-      console.log("Submit Booking Failed.", err.message)
+      console.log("Create Booking Failed.", err.message)
+      alert("Failed to create booking: " + err.message);
     }
+  }
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
   }
 
   return loading ? (
     <Loader />
+  ) : showPayment ? (
+    <>
+      <Navbar />
+      <div className="listing-details">
+        <BookingPayment 
+          bookingData={bookingData}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+        />
+      </div>
+      <Footer />
+    </>
   ) : (
     <>
       <Navbar />
@@ -247,7 +299,7 @@ const ListingDetails = () => {
               <p>End Date: {dateRange[0].endDate.toDateString()}</p>
 
               <button className="button" type="submit" onClick={handleSubmit}>
-                BOOKING
+                BOOK NOW
               </button>
             </div>
           </div>

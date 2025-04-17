@@ -1,103 +1,107 @@
 import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { createPaymentIntent, confirmPayment, setPaymentToken } from '../services/paymentService';
+import { createRazorpayOrder, initializeRazorpay, verifyPayment } from '../services/paymentService';
 import '../styles/PaymentForm.scss';
 
-const stripePromise = loadStripe('your_publishable_key'); // Replace with your Stripe publishable key
-
-const PaymentFormContent = ({ bookingData, onSuccess, onError }) => {
-  const stripe = useStripe();
-  const elements = useElements();
+const PaymentForm = ({ bookingData, onSuccess, onError }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    // Initialize Razorpay script
+    initializeRazorpay();
+  }, []);
 
+  const handlePayment = async () => {
     try {
-      // Create payment intent
-      const { clientSecret, paymentToken } = await createPaymentIntent(bookingData);
-      
-      // Store the payment token
-      if (paymentToken) {
-        setPaymentToken(paymentToken);
-      }
+      setLoading(true);
+      setError(null);
 
-      // Confirm the payment
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-          billing_details: {
-            name: bookingData.guestName,
-            email: bookingData.guestEmail,
-          },
+      // Create Razorpay order
+      const order = await createRazorpayOrder(bookingData);
+
+      // Initialize Razorpay payment
+      const options = {
+        key: "rzp_test_xX1PSLY0vlu4TL",
+        amount: order.amount,
+        currency: order.currency,
+        name: 'ChillSpace',
+        description: `Booking for ${bookingData.listingName || 'Property'}`,
+        order_id: order.orderId,
+        handler: async (response) => {
+          try {
+            // Verify payment
+            const verification = await verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+
+            if (verification.verified) {
+              onSuccess(verification.payment);
+            } else {
+              throw new Error(verification.message || 'Payment verification failed');
+            }
+          } catch (error) {
+            setError(error.message);
+            onError(error);
+          }
         },
-      });
+        prefill: {
+          name: bookingData.userName || bookingData.guestName,
+          email: bookingData.userEmail || bookingData.guestEmail,
+          contact: bookingData.userPhone || ''
+        },
+        theme: {
+          color: '#4CAF50'
+        }
+      };
 
-      if (stripeError) {
-        throw new Error(stripeError.message);
-      }
-
-      // Confirm payment on our backend
-      await confirmPayment(paymentIntent.id);
-      onSuccess(paymentIntent);
-    } catch (err) {
-      setError(err.message);
-      onError(err);
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      setError(error.message);
+      onError(error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="payment-form">
-      <div className="form-header">
-        <h2>Complete Your Booking</h2>
-        <p className="booking-summary">
-          Total Amount: ${bookingData.totalAmount}
-        </p>
+    <div className="payment-form">
+      <div className="payment-summary">
+        <h3>Payment Summary</h3>
+        <div className="summary-item">
+          <span>Listing:</span>
+          <span>{bookingData.listingName || 'Property'}</span>
+        </div>
+        <div className="summary-item">
+          <span>Check-in:</span>
+          <span>{new Date(bookingData.checkIn || bookingData.startDate).toLocaleDateString()}</span>
+        </div>
+        <div className="summary-item">
+          <span>Check-out:</span>
+          <span>{new Date(bookingData.checkOut || bookingData.endDate).toLocaleDateString()}</span>
+        </div>
+        <div className="summary-item total">
+          <span>Total Amount:</span>
+          <span>${bookingData.totalAmount}</span>
+        </div>
       </div>
 
-      <div className="card-element-container">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-              },
-              invalid: {
-                color: '#9e2146',
-              },
-            },
-          }}
-        />
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
 
       <button
-        type="submit"
-        disabled={!stripe || loading}
-        className={`submit-button ${loading ? 'loading' : ''}`}
+        className="pay-button"
+        onClick={handlePayment}
+        disabled={loading}
       >
         {loading ? 'Processing...' : 'Pay Now'}
       </button>
-    </form>
-  );
-};
-
-const PaymentForm = (props) => {
-  return (
-    <Elements stripe={stripePromise}>
-      <PaymentFormContent {...props} />
-    </Elements>
+    </div>
   );
 };
 

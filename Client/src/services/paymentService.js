@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:3001';
 
 // Store the payment token
 let paymentToken = null;
@@ -24,22 +24,16 @@ const getHeaders = () => {
 
 export const createPaymentIntent = async (bookingData) => {
   try {
-    const response = await axios.post(`${API_URL}/payments/create-intent`, bookingData);
-    
-    // Store the payment token if provided
-    if (response.data.paymentToken) {
-      setPaymentToken(response.data.paymentToken);
-    }
-    
+    const response = await axios.post(`${API_URL}/api/payments/create-intent`, bookingData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to create payment intent');
   }
 };
 
-export const confirmPayment = async (paymentIntentId) => {
+export const confirmPayment = async (paymentData) => {
   try {
-    const response = await axios.post(`${API_URL}/payments/confirm`, { paymentIntentId });
+    const response = await axios.post(`${API_URL}/api/payments/confirm`, paymentData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to confirm payment');
@@ -48,9 +42,7 @@ export const confirmPayment = async (paymentIntentId) => {
 
 export const getPaymentHistory = async () => {
   try {
-    const response = await axios.get(`${API_URL}/payments/history`, {
-      headers: getHeaders()
-    });
+    const response = await axios.get(`${API_URL}/api/payments/history`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch payment history');
@@ -59,13 +51,41 @@ export const getPaymentHistory = async () => {
 
 export const refundPayment = async (paymentId, reason) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/payments/refund`, 
-      { paymentId, reason },
-      { headers: getHeaders() }
-    );
+    const response = await axios.post(`${API_URL}/api/payments/refund`, { paymentId, reason });
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to refund payment');
+    throw new Error(error.response?.data?.message || 'Failed to process refund');
+  }
+};
+
+export const initializeRazorpay = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
+
+export const createRazorpayOrder = async (bookingData) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/payments/create-order`, bookingData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to create Razorpay order');
+  }
+};
+
+export const verifyPayment = async (paymentData) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/payments/verify`, paymentData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to verify payment');
   }
 }; 
